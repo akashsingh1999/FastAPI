@@ -1,6 +1,6 @@
 from random import randrange
 from fastapi import FastAPI, status, HTTPException, Response, Depends
-from typing import Optional
+from typing import Optional, List
 from . import models, schemas
 from .database import engine, SessionLocal, get_db
 from sqlalchemy.orm import Session
@@ -13,12 +13,12 @@ app = FastAPI()
 def root():
     return {"message":"Hello World"}
 
-@app.get("/posts")
+@app.get("/posts", response_model=List[schemas.Post])
 def get_posts(db: Session = Depends(get_db)):
     posts = db.query(models.Post).all()
     return posts
 
-@app.get("/posts/{id}")
+@app.get("/posts/{id}", response_model=schemas.Post)
 def get_post(id: int, db: Session = Depends(get_db)):
     post = db.query(models.Post).filter(models.Post.id == id).first()
     if post == None:
@@ -55,3 +55,12 @@ def update_post(id: int, payLoad: schemas.PostCreate, db: Session = Depends(get_
     post_query.update(payLoad.model_dump(), synchronize_session=False)
     db.commit()
     return {"message": "post updated successfully"}
+
+@app.post("/signup", status_code=status.HTTP_201_CREATED, response_model=schemas.UserOut)
+def create_user(payload : schemas.CreateUser, db: Session = Depends(get_db)):
+    new_user = models.User(**payload.model_dump())
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    print(new_user)
+    return new_user

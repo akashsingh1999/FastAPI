@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 
 class PostBase(BaseModel):
     title : str
@@ -10,5 +10,17 @@ class PostCreate(PostBase):
 
 class Post(PostBase):
     
+    class config:
+        orm_mode = True
+
+class CreateUser(BaseModel):
+    email: EmailStr
+    password: str
+
+
+class UserOut(BaseModel):
+    id: int
+    email: EmailStr
+
     class config:
         orm_mode = True
